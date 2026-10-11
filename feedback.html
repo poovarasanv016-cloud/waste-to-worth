@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Give Feedback — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section feedback-form-page">
+    <div class="form-page-card">
+        <h1 class="page-title"><i class="fas fa-star"></i> Give Feedback</h1>
+        <p class="page-subtitle">How was your experience with <strong>{{ req.food_name }}</strong>?</p>
+        <form method="POST">
+            <div class="form-group">
+                <label><i class="fas fa-star"></i> Rating</label>
+                <div class="star-rating">
+                    {% for i in range(1,6) %}
+                    <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" required>
+                    <label for="star{{ i }}">★</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Comments</label>
+                <textarea name="comment" rows="5" maxlength="500" placeholder="Share your experience..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
+                <a href="{{ url_for('feedbacks') }}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

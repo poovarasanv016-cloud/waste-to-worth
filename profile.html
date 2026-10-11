@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Personal Information — Waste to Worth<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('profile_photo');
+    const preview = document.getElementById('profileAvatarPreview');
+    const initial = document.getElementById('profileAvatarInitial');
+    if (!input || !preview) return;
+    input.addEventListener('change', function () {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            alert('Please choose a JPG, PNG, or WEBP photo.');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            preview.src = event.target.result;
+            preview.classList.remove('avatar-preview-hidden');
+            if (initial) initial.classList.add('avatar-preview-hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+});
+</script>
+{% endblock %}
+{% block content %}
+<section class="personal-page">
+    <div class="personal-card">
+        <header class="personal-heading">
+            <div class="personal-heading-icon"><i class="fas fa-user"></i></div>
+            <div>
+                <h1>Personal Information</h1>
+                <p>Manage and update your personal details</p>
+            </div>
+        </header>
+
+        <div class="personal-layout">
+            <aside class="personal-summary">
+                <label class="avatar-upload-trigger" for="profile_photo" title="Upload profile photo" aria-label="Upload profile photo">
+                    {% if user.profile_photo %}
+                        <img id="profileAvatarPreview" class="personal-avatar personal-avatar-photo" src="{{ url_for('static', filename='uploads/profile_photos/' ~ user.profile_photo) }}" alt="Profile photo">
+                    {% else %}
+                        <span id="profileAvatarInitial" class="personal-avatar">{{ user.name[0].upper() if user.name else 'U' }}</span>
+                        <img id="profileAvatarPreview" class="personal-avatar personal-avatar-photo avatar-preview-hidden" alt="Profile photo preview">
+                    {% endif %}
+                    <span class="avatar-upload-badge"><i class="fas fa-camera"></i></span>
+                </label>
+                <input id="profile_photo" class="avatar-file-input" type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" form="profile-form">
+                <p class="avatar-upload-hint">Click photo to upload</p>
+                <h2>{{ user.name }}</h2>
+                <div class="summary-divider"></div>
+                <div class="summary-item"><i class="fas fa-envelope"></i><div><strong>Email Address</strong><span>{{ user.email }}</span></div></div>
+                <div class="summary-item"><i class="fas fa-calendar-alt"></i><div><strong>Member Since</strong><span>{{ user.created_at or 'Member' }}</span></div></div>
+                <div class="summary-item"><i class="fas fa-shield-alt"></i><div><strong>Account Type</strong><span>{{ user.role }}</span></div></div>
+            </aside>
+
+            <form id="profile-form" class="personal-form" method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data">
+                <div class="personal-field">
+                    <label for="name">Full Name <b>*</b></label>
+                    <div class="input-wrap"><input id="name" type="text" name="name" value="{{ user.name }}" required autocomplete="name"></div>
+                </div>
+                <div class="personal-field">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrap readonly"><input id="email" type="email" value="{{ user.email }}" readonly aria-readonly="true" autocomplete="email"></div>
+                    <small>Email address cannot be changed here.</small>
+                </div>
+                <div class="personal-field">
+                    <label for="date_of_birth">Date of Birth</label>
+                    <div class="input-wrap"><input id="date_of_birth" type="date" name="date_of_birth" value="{{ user.date_of_birth or '' }}" max="{{ now_date }}" autocomplete="bday"></div>
+                </div>
+                <div class="personal-field">
+                    <label for="gender">Gender</label>
+                    <div class="input-wrap"><select id="gender" name="gender" class="personal-select">
+                        <option value="">Select gender</option>
+                        {% for option in ['Male', 'Female', 'Other', 'Prefer not to say'] %}
+                        <option value="{{ option }}" {% if user.gender == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select></div>
+                </div>
+                <div class="personal-field">
+                    <label for="phone">Mobile Number</label>
+                    <div class="input-wrap"><input id="phone" type="tel" name="phone" value="{{ user.phone or '' }}" placeholder="Enter your mobile number" autocomplete="tel" inputmode="tel"></div>
+                </div>
+                <div class="personal-field">
+                    <label for="address">Address</label>
+                    <div class="input-wrap textarea-wrap"><textarea id="address" name="address" rows="4" placeholder="Enter your address" autocomplete="street-address">{{ user.address or '' }}</textarea></div>
+                </div>
+                <div class="personal-actions">
+                    <button type="submit" class="personal-save"><i class="fas fa-check-circle"></i> Save Changes</button>
+                    <button type="reset" class="personal-cancel"><i class="fas fa-times"></i> Reset</button>
+                    <a class="personal-logout" href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to logout?');"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </form>
+            <form class="delete-account-form" method="POST" action="{{ url_for('delete_account') }}" onsubmit="return confirm('Delete your account permanently? This will remove your profile, donations, requests, and related records. This action cannot be undone.');">
+                <button type="submit" class="personal-delete"><i class="fas fa-trash-alt"></i> Delete Account</button>
+            </form>
+        </div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('profile_photo');
+    const preview = document.getElementById('profileAvatarPreview');
+    const initial = document.getElementById('profileAvatarInitial');
+    if (!input || !preview) return;
+    input.addEventListener('change', function () {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            alert('Please choose a JPG, PNG, or WEBP photo.');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            preview.src = event.target.result;
+            preview.classList.remove('avatar-preview-hidden');
+            if (initial) initial.classList.add('avatar-preview-hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+});
+</script>
+{% endblock %}

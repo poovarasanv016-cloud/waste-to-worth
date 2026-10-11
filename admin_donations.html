@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Food Donations — Admin{% endblock %}
+{% block content %}
+<div class="container section admin-donations-page">
+    <div class="page-header-row">
+        <h1 class="page-title"><i class="fas fa-hand-holding-heart"></i> All Food Donations</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Admin Home</a>
+    </div>
+
+    <section class="donation-filter-panel" aria-label="Filter food donations">
+        <div class="donation-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input id="donationSearch" type="search" placeholder="Search food, donor, or location..." aria-label="Search food, donor, or location">
+        </div>
+        <select id="donationTypeFilter" aria-label="Filter by food type">
+            <option value="">All Types</option>
+            {% for type_name in donations|map(attribute='food_type')|select|unique|sort %}
+            <option value="{{ type_name|lower }}">{{ type_name }}</option>
+            {% endfor %}
+        </select>
+        <select id="donationStatusFilter" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            {% for status_name in donations|map(attribute='status')|select|unique|sort %}
+            <option value="{{ status_name|lower }}">{{ status_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="applyDonationFilters" class="btn btn-primary donation-filter-btn"><i class="fas fa-filter"></i> Filter</button>
+        <button type="button" id="clearDonationFilters" class="donation-clear-btn">Clear</button>
+    </section>
+    <div class="donation-filter-summary"><span id="donationResultCount">{{ donations|length }} donations</span><span>Filter by keyword, food type, or status</span></div>
+
+    <div class="table-wrap donation-table-wrap">
+    <table class="data-table" id="donationsTable">
+        <thead>
+            <tr><th>#</th><th>Food</th><th>Qty</th><th>Type</th><th>Donor</th><th>Location</th><th>Expiry</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        {% for d in donations %}
+        <tr class="donation-row" data-food="{{ d.food_name|lower }}" data-donor="{{ d.donor_name|lower }}" data-location="{{ d.pickup_location|lower }}" data-type="{{ d.food_type|lower }}" data-status="{{ d.status|lower }}">
+            <td>{{ d.id }}</td>
+            <td><strong>{{ d.food_name }}</strong></td>
+            <td>{{ d.quantity }}</td>
+            <td><span class="type-tag">{{ d.food_type }}</span></td>
+            <td>{{ d.donor_name }}</td>
+            <td>{{ d.pickup_location }}</td>
+            <td>{{ d.expiry_time }}</td>
+            <td><span class="status-badge status-{{ d.status.lower() }}">{{ d.status }}</span></td>
+            <td>
+                <form method="POST" action="{{ url_for('delete_donation', did=d.id) }}" onsubmit="return confirm('Delete this donation?')">
+                    <button class="btn btn-sm btn-danger" aria-label="Delete {{ d.food_name }}"><i class="fas fa-trash"></i></button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr id="noDonationResults" hidden><td colspan="9" class="donation-empty-state"><i class="fas fa-search"></i><br>No donations match your filters.</td></tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<style>
+.admin-donations-page .page-header-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.donation-filter-panel{display:grid;grid-template-columns:minmax(220px,1fr) minmax(130px,190px) minmax(140px,190px) auto auto;gap:10px;align-items:center;background:#fff;padding:14px;border:1px solid #e5eaf0;border-radius:14px;box-shadow:0 5px 18px rgba(31,51,73,.06);margin-bottom:10px}
+.donation-search-wrap{display:flex;align-items:center;gap:10px;min-width:0;border:1px solid #dce4ec;border-radius:9px;padding:0 13px;background:#fff;color:#607487}
+.donation-search-wrap input{width:100%;min-width:0;height:44px;border:0!important;outline:none!important;box-shadow:none!important;background:transparent;padding:0;font:inherit;color:#2c4053}
+.donation-filter-panel select{height:46px;min-width:0;width:100%;border:1px solid #dce4ec;border-radius:9px;padding:0 12px;background:#fff;color:#304356;font:inherit}
+.donation-filter-btn{height:44px;white-space:nowrap;background:#07834d!important;border-color:#07834d!important}
+.donation-clear-btn{border:0;background:transparent;color:#637487;padding:10px 8px;cursor:pointer;font:inherit}
+.donation-clear-btn:hover{color:#07834d}
+.donation-filter-summary{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#6d7e8e;font-size:13px;margin:0 2px 14px}
+.donation-filter-summary #donationResultCount{font-weight:700;color:#304356}
+.donation-table-wrap{overflow-x:auto;border-radius:12px}
+.donation-table-wrap .data-table{min-width:920px}
+.donation-empty-state{text-align:center!important;padding:34px 16px!important;color:#718294!important;line-height:2}
+.donation-empty-state i{font-size:22px;color:#0a9258}
+@media(max-width:900px){.donation-filter-panel{grid-template-columns:1fr 1fr}.donation-search-wrap{grid-column:1/-1}.donation-filter-btn{width:100%}}
+@media(max-width:520px){.donation-filter-panel{grid-template-columns:1fr}.donation-search-wrap{grid-column:auto}.donation-filter-panel select{width:100%}}
+</style>
+<script>
+(function(){
+  const search=document.getElementById('donationSearch');
+  const typeFilter=document.getElementById('donationTypeFilter');
+  const statusFilter=document.getElementById('donationStatusFilter');
+  const rows=Array.from(document.querySelectorAll('.donation-row'));
+  const count=document.getElementById('donationResultCount');
+  const empty=document.getElementById('noDonationResults');
+  function applyFilters(){
+    const term=search.value.trim().toLowerCase();
+    const type=typeFilter.value.toLowerCase();
+    const status=statusFilter.value.toLowerCase();
+    let visible=0;
+    rows.forEach(row=>{
+      const matchesText=[row.dataset.food,row.dataset.donor,row.dataset.location].some(value=>value.includes(term));
+      const matchesType=!type||row.dataset.type===type;
+      const matchesStatus=!status||row.dataset.status===status;
+      const show=matchesText&&matchesType&&matchesStatus;
+      row.hidden=!show;
+      if(show) visible++;
+    });
+    empty.hidden=visible!==0;
+    count.textContent=visible+' donation'+(visible===1?'':'s');
+  }
+  document.getElementById('applyDonationFilters').addEventListener('click',applyFilters);
+  search.addEventListener('input',applyFilters);
+  typeFilter.addEventListener('change',applyFilters);
+  statusFilter.addEventListener('change',applyFilters);
+  document.getElementById('clearDonationFilters').addEventListener('click',function(){search.value='';typeFilter.value='';statusFilter.value='';applyFilters();});
+  applyFilters();
+})();
+</script>
+{% endblock %}

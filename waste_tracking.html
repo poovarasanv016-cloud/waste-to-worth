@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Waste Tracking — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section">
+    <h1 class="page-title"><i class="fas fa-chart-bar"></i> Report Dashboard</h1>
+
+    <div class="stats-grid-lg">
+        <div class="stat-card-lg green">
+            <i class="fas fa-hand-holding-heart"></i>
+            <span class="stat-num-lg">{{ stats.total_donated }}</span>
+            <span>Total Food Donated</span>
+        </div>
+        <div class="stat-card-lg blue">
+            <i class="fas fa-truck"></i>
+            <span class="stat-num-lg">{{ stats.total_distributed }}</span>
+            <span>Total Distributed</span>
+        </div>
+        <div class="stat-card-lg orange">
+            <i class="fas fa-leaf"></i>
+            <span class="stat-num-lg">{{ stats.total_saved }}</span>
+            <span>Total Food Saved</span>
+        </div>
+        <div class="stat-card-lg purple">
+            <i class="fas fa-users"></i>
+            <span class="stat-num-lg">{{ stats.num_donors }}</span>
+            <span>Active Donors</span>
+        </div>
+        <div class="stat-card-lg teal">
+            <i class="fas fa-clipboard-list"></i>
+            <span class="stat-num-lg">{{ stats.num_requests }}</span>
+            <span>Total Requests</span>
+        </div>
+    </div>
+
+    <div class="tracking-grid">
+        <div class="track-card">
+            <h3><i class="fas fa-calendar-alt"></i> Monthly Donations</h3>
+            {% if monthly %}
+            <table class="data-table">
+                <thead><tr><th>Month</th><th>Donations</th><th>Progress</th></tr></thead>
+                <tbody>
+                {% for m in monthly %}
+                <tr>
+                    <td>{{ m.month }}</td>
+                    <td>{{ m.cnt }}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:{{ [m.cnt * 10, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-msg">No monthly data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="track-card">
+            <h3><i class="fas fa-star"></i> Recent Feedback</h3>
+            {% if feedbacks %}
+            {% for f in feedbacks %}
+            <div class="feedback-item">
+                <div class="feedback-header">
+                    <span class="feedback-user">{{ f.name }}</span>
+                    <span class="feedback-stars">{{ '★' * f.rating }}{{ '☆' * (5 - f.rating) }}</span>
+                </div>
+                {% if f.comment %}
+                <p class="feedback-comment">{{ f.comment }}</p>
+                {% endif %}
+                <span class="feedback-date">{{ f.created_at }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="empty-msg">No feedback yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="impact-box">
+        <h3><i class="fas fa-globe-asia"></i> Environmental Impact</h3>
+        <p>By distributing <strong>{{ stats.total_distributed }}</strong> food items, our community has helped prevent
+        approximately <strong>{{ (stats.total_distributed * 2.5)|round(1) }} kg</strong> of CO₂ emissions
+        and saved <strong>{{ (stats.total_distributed * 1.5)|round(1) }} kg</strong> of food from landfills.</p>
+    </div>
+</div>
+{% endblock %}

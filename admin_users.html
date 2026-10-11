@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Manage Users — Admin{% endblock %}
+{% block content %}
+<div class="container section admin-users-page">
+    <div class="page-header-row">
+        <h1 class="page-title"><i class="fas fa-users"></i> Manage Users</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Admin Home</a>
+    </div>
+
+    <section class="user-filter-panel" aria-label="Filter users">
+        <div class="user-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input id="userSearch" type="search" placeholder="Search name, email, phone, or address..." aria-label="Search users">
+        </div>
+        <select id="userRoleFilter" aria-label="Filter by user role">
+            <option value="">All Roles</option>
+            {% for role_name in users|map(attribute='role')|select|unique|sort %}
+            <option value="{{ role_name|lower }}">{{ role_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="applyUserFilters" class="btn btn-primary user-filter-btn"><i class="fas fa-filter"></i> Filter</button>
+        <button type="button" id="clearUserFilters" class="user-clear-btn">Clear</button>
+    </section>
+    <div class="user-filter-summary">
+        <span id="userResultCount">{{ users|length }} users</span>
+        <span>Filter by keyword or role</span>
+    </div>
+
+    <div class="table-wrap user-table-wrap">
+    <table class="data-table" id="usersTable">
+        <thead>
+            <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Phone</th><th>Address</th><th>Joined</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+        <tr class="user-row" data-name="{{ u.name|lower }}" data-email="{{ u.email|lower }}" data-role="{{ u.role|lower }}" data-phone="{{ (u.phone or '')|lower }}" data-address="{{ (u.address or '')|lower }}">
+            <td>{{ u.id }}</td>
+            <td><div class="user-cell"><div class="mini-avatar">{{ u.name[0] }}</div>{{ u.name }}</div></td>
+            <td>{{ u.email }}</td>
+            <td><span class="role-tag role-{{ u.role.lower() }}">{{ u.role }}</span></td>
+            <td>{{ u.phone or '—' }}</td>
+            <td>{{ u.address or '—' }}</td>
+            <td>{{ u.created_at }}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;">
+                    <a href="{{ url_for('admin_view_user', uid=u.id) }}" class="btn btn-sm btn-outline" title="View user"><i class="fas fa-eye"></i> View</a>
+                    {% if u.role != 'Admin' %}
+                    <form method="POST" action="{{ url_for('delete_user', uid=u.id) }}" onsubmit="return confirm('Delete user {{ u.name }}?')">
+                        <button class="btn btn-sm btn-danger" title="Delete user"><i class="fas fa-trash"></i></button>
+                    </form>
+                    {% else %}<span style="color:#aaa">Protected</span>{% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr id="noUserResults" hidden><td colspan="8" class="user-empty-state"><i class="fas fa-search"></i><br>No users match your filters.</td></tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<style>
+.admin-users-page .page-header-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.user-filter-panel{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,220px) auto auto;gap:10px;align-items:center;background:#fff;padding:14px;border:1px solid #e5eaf0;border-radius:14px;box-shadow:0 5px 18px rgba(31,51,73,.06);margin-bottom:10px}
+.user-search-wrap{display:flex;align-items:center;gap:10px;min-width:0;border:1px solid #dce4ec;border-radius:9px;padding:0 13px;background:#fff;color:#607487}
+.user-search-wrap input{width:100%;min-width:0;height:44px;border:0!important;outline:none!important;box-shadow:none!important;background:transparent;padding:0;font:inherit;color:#2c4053}
+.user-filter-panel select{height:46px;min-width:0;width:100%;border:1px solid #dce4ec;border-radius:9px;padding:0 12px;background:#fff;color:#304356;font:inherit}
+.user-filter-btn{height:44px;white-space:nowrap;background:#07834d!important;border-color:#07834d!important}
+.user-clear-btn{border:0;background:transparent;color:#637487;padding:10px 8px;cursor:pointer;font:inherit}.user-clear-btn:hover{color:#07834d}
+.user-filter-summary{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#6d7e8e;font-size:13px;margin:0 2px 14px}.user-filter-summary #userResultCount{font-weight:700;color:#304356}
+.user-table-wrap{overflow-x:auto;border-radius:12px}.user-table-wrap .data-table{min-width:980px}.user-empty-state{text-align:center!important;padding:34px 16px!important;color:#718294!important;line-height:2}.user-empty-state i{font-size:22px;color:#0a9258}
+@media(max-width:900px){.user-filter-panel{grid-template-columns:1fr 1fr}.user-search-wrap{grid-column:1/-1}.user-filter-btn{width:100%}}
+@media(max-width:520px){.user-filter-panel{grid-template-columns:1fr}.user-search-wrap{grid-column:auto}.user-filter-panel select{width:100%}}
+</style>
+<script>
+(function(){
+  const search=document.getElementById('userSearch');
+  const roleFilter=document.getElementById('userRoleFilter');
+  const rows=Array.from(document.querySelectorAll('.user-row'));
+  const count=document.getElementById('userResultCount');
+  const empty=document.getElementById('noUserResults');
+  if(!search||!roleFilter||!count)return;
+  function applyFilters(){
+    const term=search.value.trim().toLowerCase();
+    const role=roleFilter.value.toLowerCase();
+    let visible=0;
+    rows.forEach(row=>{
+      const values=[row.dataset.name,row.dataset.email,row.dataset.phone,row.dataset.address];
+      const matchesText=!term||values.some(value=>(value||'').includes(term));
+      const matchesRole=!role||row.dataset.role===role;
+      const show=matchesText&&matchesRole;
+      row.hidden=!show;
+      if(show)visible++;
+    });
+    if(empty)empty.hidden=visible!==0;
+    count.textContent=visible+' user'+(visible===1?'':'s');
+  }
+  document.getElementById('applyUserFilters').addEventListener('click',applyFilters);
+  search.addEventListener('input',applyFilters);
+  roleFilter.addEventListener('change',applyFilters);
+  document.getElementById('clearUserFilters').addEventListener('click',function(){search.value='';roleFilter.value='';applyFilters();});
+  applyFilters();
+})();
+</script>
+{% endblock %}

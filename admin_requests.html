@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Food Requests — Admin{% endblock %}
+{% block content %}
+<div class="container section admin-requests-page">
+    <div class="page-header-row">
+        <h1 class="page-title"><i class="fas fa-clipboard-list"></i> Food Requests (View Only)</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Admin Home</a>
+    </div>
+
+    <section class="request-filter-panel" aria-label="Filter food requests">
+        <div class="request-search-wrap">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input id="requestSearch" type="search" placeholder="Search food, donor, receiver, or location..." aria-label="Search food requests">
+        </div>
+        <select id="requestStatusFilter" aria-label="Filter by request status">
+            <option value="">All Statuses</option>
+            {% for status_name in requests_list|map(attribute='status')|select|unique|sort %}
+            <option value="{{ status_name|lower }}">{{ status_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="applyRequestFilters" class="btn btn-primary request-filter-btn"><i class="fas fa-filter"></i> Filter</button>
+        <button type="button" id="clearRequestFilters" class="request-clear-btn">Clear</button>
+    </section>
+    <div class="request-filter-summary">
+        <span id="requestResultCount">{{ requests_list|length }} requests</span>
+        <span>Filter by keyword or request status</span>
+    </div>
+
+    {% if requests_list %}
+    <div class="table-wrap request-table-wrap">
+        <table class="data-table" id="requestsTable">
+            <thead>
+                <tr><th>#</th><th>Food</th><th>Qty</th><th>Donor</th><th>Receiver</th><th>Location</th><th>Requested</th><th>Status</th><th>Management</th></tr>
+            </thead>
+            <tbody>
+            {% for r in requests_list %}
+            <tr class="request-row" data-food="{{ r.food_name|lower }}" data-donor="{{ r.donor_name|lower }}" data-receiver="{{ r.receiver_name|lower }}" data-location="{{ r.pickup_location|lower }}" data-status="{{ r.status|lower }}">
+                <td>{{ r.id }}</td>
+                <td><strong>{{ r.food_name }}</strong></td>
+                <td>{{ r.quantity }}</td>
+                <td>{{ r.donor_name }}</td>
+                <td>{{ r.receiver_name }}</td>
+                <td>{{ r.pickup_location }}</td>
+                <td>{{ r.requested_at }}</td>
+                <td><span class="status-badge status-{{ r.status.lower() }}">{{ r.status }}</span></td>
+                <td><span class="request-managed-label">Managed by donor</span></td>
+            </tr>
+            {% endfor %}
+            <tr id="noRequestResults" hidden><td colspan="9" class="request-empty-state"><i class="fas fa-search"></i><br>No requests match your filters.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-msg">No requests found.</p>
+    {% endif %}
+</div>
+
+<style>
+.admin-requests-page .page-header-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.request-filter-panel{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,220px) auto auto;gap:10px;align-items:center;background:#fff;padding:14px;border:1px solid #e5eaf0;border-radius:14px;box-shadow:0 5px 18px rgba(31,51,73,.06);margin-bottom:10px}
+.request-search-wrap{display:flex;align-items:center;gap:10px;min-width:0;border:1px solid #dce4ec;border-radius:9px;padding:0 13px;background:#fff;color:#607487}
+.request-search-wrap input{width:100%;min-width:0;height:44px;border:0!important;outline:none!important;box-shadow:none!important;background:transparent;padding:0;font:inherit;color:#2c4053}
+.request-filter-panel select{height:46px;min-width:0;width:100%;border:1px solid #dce4ec;border-radius:9px;padding:0 12px;background:#fff;color:#304356;font:inherit}
+.request-filter-btn{height:44px;white-space:nowrap;background:#07834d!important;border-color:#07834d!important}
+.request-clear-btn{border:0;background:transparent;color:#637487;padding:10px 8px;cursor:pointer;font:inherit}.request-clear-btn:hover{color:#07834d}
+.request-filter-summary{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#6d7e8e;font-size:13px;margin:0 2px 14px}.request-filter-summary #requestResultCount{font-weight:700;color:#304356}
+.request-table-wrap{overflow-x:auto;border-radius:12px}.request-table-wrap .data-table{min-width:980px}.request-managed-label{color:#888}.request-empty-state{text-align:center!important;padding:34px 16px!important;color:#718294!important;line-height:2}.request-empty-state i{font-size:22px;color:#0a9258}
+@media(max-width:900px){.request-filter-panel{grid-template-columns:1fr 1fr}.request-search-wrap{grid-column:1/-1}.request-filter-btn{width:100%}}
+@media(max-width:520px){.request-filter-panel{grid-template-columns:1fr}.request-search-wrap{grid-column:auto}.request-filter-panel select{width:100%}}
+</style>
+<script>
+(function(){
+  const search=document.getElementById('requestSearch');
+  const statusFilter=document.getElementById('requestStatusFilter');
+  const rows=Array.from(document.querySelectorAll('.request-row'));
+  const count=document.getElementById('requestResultCount');
+  const empty=document.getElementById('noRequestResults');
+  if(!search||!statusFilter||!count)return;
+  function applyFilters(){
+    const term=search.value.trim().toLowerCase();
+    const status=statusFilter.value.toLowerCase();
+    let visible=0;
+    rows.forEach(row=>{
+      const matchesText=[row.dataset.food,row.dataset.donor,row.dataset.receiver,row.dataset.location].some(value=>(value||'').includes(term));
+      const matchesStatus=!status||row.dataset.status===status;
+      const show=matchesText&&matchesStatus;
+      row.hidden=!show;
+      if(show)visible++;
+    });
+    if(empty)empty.hidden=visible!==0;
+    count.textContent=visible+' request'+(visible===1?'':'s');
+  }
+  document.getElementById('applyRequestFilters').addEventListener('click',applyFilters);
+  search.addEventListener('input',applyFilters);
+  statusFilter.addEventListener('change',applyFilters);
+  document.getElementById('clearRequestFilters').addEventListener('click',function(){search.value='';statusFilter.value='';applyFilters();});
+  applyFilters();
+})();
+</script>
+{% endblock %}

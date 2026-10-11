@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Donate Food — Waste to Worth<script>
+document.getElementById('food_image')?.addEventListener('change', function(e){const file=e.target.files[0], img=document.getElementById('food-preview'), label=document.querySelector('.food-upload-label'); if(file){img.src=URL.createObjectURL(file); img.style.display='block'; label.style.display='none';}});
+</script>
+{% endblock %}
+{% block content %}
+<style>
+.donate-page{max-width:1240px;margin:18px auto 24px;padding:0 22px;display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start;color:#17464a}
+.donate-info{background:#f1faf3;border:1px solid #e0efe4;border-radius:18px;padding:23px 22px;align-self:start}
+.donate-tag{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:30px;background:#d9f2e1;color:#14804a;font-weight:700;font-size:13px}
+.donate-info h1{font-size:clamp(27px,2.5vw,34px);line-height:1.16;margin:16px 0 11px;color:#153f43;letter-spacing:-.7px}
+.donate-info h1 span{color:#f47721}.donate-underline{height:4px;width:125px;background:#f47721;border-radius:9px;margin:0 0 22px}
+.donate-info>p{font-size:13px;line-height:1.65;color:#5e797c;margin-bottom:18px}
+.donate-benefit{display:flex;gap:11px;align-items:flex-start;margin:15px 0}.donate-benefit-icon{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;background:#d6f0df;color:#14834b;font-size:20px}.donate-benefit:nth-of-type(3) .donate-benefit-icon{background:#fff0d0;color:#ee9b09}.donate-benefit h3{font-size:14px;margin:2px 0 5px}.donate-benefit p{font-size:12px;color:#789094;line-height:1.55}
+.donate-card{background:#fff;border:1px solid #e3ebeb;border-radius:18px;padding:22px 28px 24px;box-shadow:0 10px 32px rgba(20,63,67,.055);min-width:0}
+.donate-heading{display:flex;align-items:center;gap:15px;padding-bottom:15px;border-bottom:2px solid #bce4ca;margin-bottom:18px}.donate-heading-icon{width:54px;height:54px;flex:0 0 54px;border-radius:50%;background:#128b4b;color:#fff;display:grid;place-items:center;font-size:28px}.donate-heading h2{font-size:clamp(24px,2.5vw,33px);line-height:1.2;letter-spacing:-.5px;color:#153f43}.donate-heading p{font-size:13px;color:#748b8e;margin-top:5px;line-height:1.5}
+.donate-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}.donate-field{min-width:0;display:flex;flex-direction:column}.donate-field.full{grid-column:1/-1}.donate-field label{font-size:12px;font-weight:700;color:#214d50;margin-bottom:6px}.donate-field label i{margin-right:7px}.donate-field .req{color:#e74c3c}.donate-field input,.donate-field select,.donate-field textarea{width:100%;min-height:42px;border:1.5px solid #d9e6e8;border-radius:9px;background:#fff;padding:10px 12px;font:inherit;font-size:14px;color:#365e62;outline:none;transition:border-color .2s,box-shadow .2s}.donate-field textarea{min-height:72px;resize:vertical}.donate-field input:focus,.donate-field select:focus,.donate-field textarea:focus{border-color:#16894c;box-shadow:0 0 0 3px rgba(22,137,76,.09)}.donate-field input::placeholder,.donate-field textarea::placeholder{color:#9aafb2}
+.food-upload-box{border:1.5px dashed #9fd8b5;border-radius:12px;background:#f7fcf8;min-height:112px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}.food-upload-box input{display:none}.food-upload-label{cursor:pointer;width:100%;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#16804a}.food-upload-label i{font-size:25px}.food-upload-label span{font-size:14px;font-weight:700}.food-upload-label small{font-size:11px;color:#819699}.food-preview{display:none;width:100%;height:150px;object-fit:cover;border-radius:10px}
+.donate-actions{display:flex;gap:12px;margin-top:17px;flex-wrap:wrap}.donate-submit,.donate-reset{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:10px;padding:11px 22px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s}.donate-submit{border:1px solid #128b4b;background:#128b4b;color:#fff}.donate-submit:hover{background:#0c733d;transform:translateY(-1px)}.donate-reset{border:1.5px solid #16894c;background:#fff;color:#16804a}.donate-reset:hover{background:#eff9f2}
+/* Keep the existing site navbar; highlight the Donate route in orange. */
+.nav-links a.active{background:#ff7518!important;color:#fff!important;border-radius:26px}.nav-links a:hover{color:#f47721}
+@media(max-width:1000px){.donate-page{grid-template-columns:1fr;max-width:760px}.donate-info{padding:25px}.donate-benefit{display:inline-flex;width:32%;vertical-align:top;margin:15px 1% 0 0}.donate-info h1 br{display:none}}
+@media(max-width:650px){.donate-page{padding:0 13px;margin:14px auto}.donate-card{padding:22px 17px}.donate-grid{grid-template-columns:1fr;gap:17px}.donate-field.full{grid-column:auto}.donate-heading{align-items:flex-start;gap:13px}.donate-heading-icon{width:52px;height:52px;flex-basis:52px;font-size:22px}.donate-heading p{font-size:12px}.donate-benefit{width:100%;margin:16px 0}.donate-actions>*{width:100%}}
+</style>
+<div class="donate-page">
+  <aside class="donate-info">
+    <div class="donate-tag"><i class="fas fa-leaf"></i> Donate Food</div>
+    <h1>Small Acts<br>Make a Big<br><span>Difference</span></h1>
+    <div class="donate-underline"></div>
+    <p>Your extra food can bring happiness to someone in need. Donate surplus food and help reduce food waste.</p>
+    <div class="donate-benefit"><div class="donate-benefit-icon"><i class="fas fa-leaf"></i></div><div><h3>Reduce Food Waste</h3><p>Keep good food out of landfills.</p></div></div>
+    <div class="donate-benefit"><div class="donate-benefit-icon"><i class="fas fa-users"></i></div><div><h3>Help Communities</h3><p>Support people in your local area.</p></div></div>
+    <div class="donate-benefit"><div class="donate-benefit-icon"><i class="fas fa-heart"></i></div><div><h3>Build a Better Tomorrow</h3><p>Together we can make a difference.</p></div></div>
+  </aside>
+  <section class="donate-card">
+    <div class="donate-heading"><div class="donate-heading-icon"><i class="fas fa-hand-holding-heart"></i></div><div><h2>Donate Surplus Food</h2><p>Fill in the details below to let your food donation reach those in need.</p></div></div>
+    <form method="POST" action="{{ url_for('donate') }}" enctype="multipart/form-data">
+      <div class="donate-grid">
+        <div class="donate-field"><label><i class="fas fa-utensils"></i> Food Name <span class="req">*</span></label><input type="text" name="food_name" required placeholder="e.g. Rice & Curry, Veg Biryani"></div>
+        <div class="donate-field"><label><i class="fas fa-box"></i> Quantity <span class="req">*</span></label><input type="text" name="quantity" required placeholder="e.g. 20 plates, 5 kg"></div>
+        <div class="donate-field"><label><i class="fas fa-tags"></i> Food Type <span class="req">*</span></label><select name="food_type" required><option value="">Select Type</option>{% for ft in ['Cooked Food','Raw Ingredients','Bakery','Fruits & Vegetables','Dairy','Beverages','Other'] %}<option value="{{ ft }}">{{ ft }}</option>{% endfor %}</select></div>
+        <div class="donate-field"><label><i class="fas fa-calendar-alt"></i> Available Date <span class="req">*</span></label><input type="date" name="available_date" required></div>
+        <div class="donate-field"><label><i class="fas fa-clock"></i> Expiry Date &amp; Time <span class="req">*</span></label><input type="datetime-local" name="expiry_time" required></div>
+        <div class="donate-field"><label><i class="fas fa-map-marker-alt"></i> Pickup Location <span class="req">*</span></label><input type="text" name="pickup_location" required placeholder="Area, City"></div>
+        <div class="donate-field full">
+          <label><i class="fas fa-camera"></i> Food Photo <span style="font-weight:400;color:#819699">(Optional)</span></label>
+          <div class="food-upload-box">
+            <input type="file" id="food_image" name="food_image" accept="image/png,image/jpeg,image/webp,image/gif">
+            <label for="food_image" class="food-upload-label"><i class="fas fa-cloud-arrow-up"></i><span>Upload Food Image</span><small>JPG, PNG, WEBP or GIF</small></label>
+            <img id="food-preview" class="food-preview" alt="Food preview">
+          </div>
+        </div>
+        <div class="donate-field full"><label><i class="fas fa-phone-alt"></i> Contact Details <span class="req">*</span></label><input type="text" name="contact_details" required placeholder="Phone number or email for pickup coordination"></div>
+        <div class="donate-field full"><label><i class="fas fa-align-left"></i> Additional Notes <span style="font-weight:400;color:#819699">(Optional)</span></label><textarea name="description" placeholder="Add extra details about the food (optional)"></textarea></div>
+      </div>
+      <div class="donate-actions"><button type="submit" class="donate-submit"><i class="fas fa-paper-plane"></i> Donate Food</button><button type="reset" class="donate-reset"><i class="fas fa-rotate-left"></i> Reset</button></div>
+    </form>
+  </section>
+</div>
+<script>
+document.getElementById('food_image')?.addEventListener('change', function(e){const file=e.target.files[0], img=document.getElementById('food-preview'), label=document.querySelector('.food-upload-label'); if(file){img.src=URL.createObjectURL(file); img.style.display='block'; label.style.display='none';}});
+</script>
+{% endblock %}

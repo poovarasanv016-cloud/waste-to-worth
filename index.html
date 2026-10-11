@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Waste to Worth — Home{% endblock %}
+{% block content %}
+<section class="sp-hero">
+  <div class="sp-hero-shade"></div>
+  <div class="sp-hero-content">
+    <span class="sp-eyebrow"><i class="fas fa-leaf"></i> Together Against Food Waste</span>
+    <h1>Share Food,<br><span>Spread Happiness</span></h1>
+    <p>Give surplus food a second chance and help someone in need.</p>
+    <a href="{{ url_for('listings') }}" class="sp-primary-btn"><i class="fas fa-search"></i> Find Food</a>
+  </div>
+</section>
+
+<section class="sp-stats">
+  <div class="sp-stat sp-stat-green"><div class="sp-stat-icon"><i class="fas fa-users"></i></div><strong>{{ stats.total_users }}</strong><span>Total Users</span></div>
+  <div class="sp-stat sp-stat-orange"><div class="sp-stat-icon"><i class="fas fa-bowl-food"></i></div><strong>{{ stats.total_available }}</strong><span>Total Available Food</span></div>
+  <div class="sp-stat sp-stat-yellow"><div class="sp-stat-icon"><i class="fas fa-circle-check"></i></div><strong>{{ stats.total_distributed }}</strong><span>Total Completed</span></div>
+</section>
+
+<section class="sp-food-section">
+  <div class="sp-heading"><span>✦</span><h2>Available Food</h2><span>✦</span></div>
+  <p class="sp-subtitle">Fresh food, ready to be shared. Help reduce food waste and make a difference.</p>
+  {% if recent_foods %}
+  <div class="sp-food-grid">
+    {% for food in recent_foods[:5] %}
+    <article class="sp-food-card">
+      <div class="sp-food-photo sp-food-photo-{{ loop.index }}"><span>{{ food.food_type }}</span></div>
+      <div class="sp-food-info">
+        <h3>{{ food.food_name }}</h3>
+        <p><i class="fas fa-box"></i> {{ food.quantity }}</p>
+        <p><i class="fas fa-location-dot"></i> {{ food.pickup_location or 'Location not specified' }}</p>
+        <p><i class="fas fa-user"></i> {{ food.donor_name }}</p>
+        <p><i class="far fa-calendar"></i> Available until {{ food.expiry_time or 'Please contact donor' }}</p>
+        {% if current_user and current_user.role != 'Admin' and food.status == 'Available' %}
+        <form method="POST" action="{{ url_for('request_food', did=food.id) }}"><button class="sp-request-btn" type="submit"><i class="fas fa-paper-plane"></i> Request Food</button></form>
+        {% elif not current_user %}
+        <a class="sp-request-btn" href="{{ url_for('login') }}"><i class="fas fa-paper-plane"></i> Login to Request</a>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="sp-view-all"><a href="{{ url_for('listings') }}">View All Foods <i class="fas fa-arrow-right"></i></a></div>
+  {% else %}
+  <p class="empty-msg">No food donations available yet. <a href="{{ url_for('donate') }}">Be the first to donate!</a></p>
+  {% endif %}
+</section>
+
+<section class="sp-how-section">
+  <div class="sp-heading"><span>✦</span><h2>How It Works</h2><span>✦</span></div>
+  <p class="sp-subtitle">Simple steps. Big impact.</p>
+  <div class="sp-steps">
+    <div class="sp-step"><div class="sp-step-icon green"><b>01</b><i class="fas fa-bowl-food"></i></div><h3>Donate Food</h3><p>Have extra food? Add your food details.</p></div>
+    <i class="fas fa-arrow-right sp-step-arrow"></i>
+    <div class="sp-step"><div class="sp-step-icon orange"><b>02</b><i class="fas fa-search"></i></div><h3>Find Food</h3><p>Browse available food near you.</p></div>
+    <i class="fas fa-arrow-right sp-step-arrow"></i>
+    <div class="sp-step"><div class="sp-step-icon green"><b>03</b><i class="fas fa-paper-plane"></i></div><h3>Request Food</h3><p>Send a request for the food you need.</p></div>
+    <i class="fas fa-arrow-right sp-step-arrow"></i>
+    <div class="sp-step"><div class="sp-step-icon orange"><b>04</b><i class="fas fa-heart"></i></div><h3>Share &amp; Help</h3><p>Help food reach someone instead of going to waste.</p></div>
+  </div>
+</section>
+
+<section class="sp-cta"><div class="sp-cta-inner"><h2>Don't Waste Food.<br><span>Share It.</span></h2><p>Every plate shared can make someone's day better.</p><a href="{{ url_for('listings') }}" class="sp-primary-btn"><i class="fas fa-search"></i> Find Food</a>{% if current_user and current_user.role != 'NGO' and current_user.role != 'Admin' %}<a href="{{ url_for('donate') }}" class="sp-donate-btn"><i class="fas fa-heart"></i> Donate Food</a>{% endif %}</div></section>
+{% endblock %}

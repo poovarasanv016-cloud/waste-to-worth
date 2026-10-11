@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Notification — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section">
+    <h1 class="page-title"><i class="fas fa-bell"></i> Notification</h1>
+
+    {% if notifications %}
+    <div class="notif-section">
+        <h3><i class="fas fa-bell-on"></i> Updates</h3>
+        {% for n in notifications %}
+        <div class="notif-item">
+            <i class="fas fa-circle-check"></i> {{ n.message }}
+            <span class="notif-time">{{ n.created_at }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('requests')">My Requests</button>
+        <button class="tab-btn" onclick="showTab('incoming-requests')">Requests for My Food</button>
+    </div>
+
+    <div id="requests" class="tab-content active">
+        <h2><i class="fas fa-hand-paper"></i> Food Requested</h2>
+        {% if my_requests %}
+        <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Food</th><th>Quantity</th><th>Location</th>
+                    <th>Requested On</th><th>Status</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in my_requests %}
+                <tr>
+                    <td><strong>{{ r.food_name }}</strong></td>
+                    <td>{{ r.quantity }}</td>
+                    <td>{{ r.pickup_location }}</td>
+                    <td>{{ r.requested_at }}</td>
+                    <td><span class="status-badge status-{{ r.status.lower() }}">{{ r.status }}</span></td>
+                    <td>
+                        {% if r.status == 'Completed' %}
+                        <a href="{{ url_for('feedback', req_id=r.id) }}" class="btn btn-sm btn-warning">Feedback</a>
+                        {% else %}-{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No requests made yet. <a href="{{ url_for('listings') }}">Browse available food.</a></p>
+        {% endif %}
+    </div>
+
+    <div id="incoming-requests" class="tab-content">
+        <h2><i class="fas fa-clipboard-check"></i> Requests for Food I Donated</h2>
+        <p class="page-subtitle">As the donor, you can approve, reject, or mark your approved requests as complete.</p>
+        {% if donor_requests %}
+        <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Food</th><th>Quantity</th><th>Requested By</th><th>Contact</th><th>Location</th><th>Requested On</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+            {% for r in donor_requests %}
+            <tr>
+                <td><strong>{{ r.food_name }}</strong></td>
+                <td>{{ r.quantity }}</td>
+                <td>{{ r.receiver_name }}</td>
+                <td>{{ r.receiver_phone or r.receiver_email }}</td>
+                <td>{{ r.pickup_location }}</td>
+                <td>{{ r.requested_at }}</td>
+                <td><span class="status-badge status-{{ r.status.lower() }}">{{ r.status }}</span></td>
+                <td class="action-cell">
+                    {% if r.status == 'Pending' %}
+                    <form method="POST" action="{{ url_for('donor_request_action', rid=r.id, action='approve') }}" style="display:inline">
+                        <button class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('donor_request_action', rid=r.id, action='reject') }}" style="display:inline">
+                        <button class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                    {% elif r.status == 'Approved' %}
+                    <form method="POST" action="{{ url_for('donor_request_action', rid=r.id, action='complete') }}" style="display:inline">
+                        <button class="btn btn-sm btn-warning">Complete</button>
+                    </form>
+                    {% else %}<span style="color:#888">{{ r.status }}</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No one has requested your donations yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

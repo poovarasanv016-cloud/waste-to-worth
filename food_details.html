@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ food.food_name }} — Waste to Worth{% endblock %}
+{% block content %}
+<div class="food-detail-page">
+    <a href="{{ url_for('listings') }}" class="food-back"><i class="fas fa-arrow-left"></i> Back to Available Food</a>
+
+    <div class="food-detail-card">
+        <a href="{{ url_for('listings') }}" class="food-detail-close" aria-label="Close" title="Close"><i class="fas fa-times"></i></a>
+        <div class="food-detail-image-wrap">
+            {% set type_lower = food.food_type|lower %}
+            {% if food.food_image %}
+                {% set food_photo = url_for('static', filename='uploads/food_photos/' ~ food.food_image) %}
+            {% elif 'fruit' in type_lower or 'vegetable' in type_lower or 'raw' in type_lower %}
+                {% set food_photo = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1100&q=85' %}
+            {% elif 'bakery' in type_lower %}
+                {% set food_photo = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1100&q=85' %}
+            {% elif 'dairy' in type_lower %}
+                {% set food_photo = 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=1100&q=85' %}
+            {% elif 'beverage' in type_lower %}
+                {% set food_photo = 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=1100&q=85' %}
+            {% else %}
+                {% set food_photo = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1100&q=85' %}
+            {% endif %}
+            <img src="{{ food_photo }}" alt="{{ food.food_name }}" onerror="this.style.display='none'; this.parentElement.classList.add('image-fallback');">
+            <span class="food-detail-status {% if food.status != 'Available' %}not-available{% endif %}"><i class="fas fa-circle"></i> {{ food.status }}</span>
+        </div>
+
+        <div class="food-detail-content">
+            <span class="food-detail-type">{{ food.food_type }}</span>
+            <h1>{{ food.food_name }}</h1>
+            <p class="food-detail-subtitle">Complete information about this food donation.</p>
+
+            <div class="food-info-grid">
+                <div class="food-info-item"><i class="fas fa-box"></i><div><small>Quantity</small><strong>{{ food.quantity }}</strong></div></div>
+                <div class="food-info-item"><i class="fas fa-map-marker-alt"></i><div><small>Pickup Location</small><strong>{{ food.pickup_location or 'Not specified' }}</strong></div></div>
+                <div class="food-info-item"><i class="fas fa-user"></i><div><small>Donated By</small><strong>{{ food.donor_name }}</strong></div></div>
+                <div class="food-info-item"><i class="far fa-calendar"></i><div><small>Available Date</small><strong>{{ food.available_date or 'Not specified' }}</strong></div></div>
+                <div class="food-info-item"><i class="fas fa-clock"></i><div><small>Available Until</small><strong>{{ food.expiry_time or 'Not specified' }}</strong></div></div>
+                <div class="food-info-item"><i class="fas fa-phone"></i><div><small>Contact</small><strong>{{ food.contact_details or food.donor_phone or 'Not specified' }}</strong></div></div>
+            </div>
+
+            <div class="food-donor-box">
+                <div class="food-donor-icon"><i class="fas fa-user"></i></div>
+                <div><small>Donor Information</small><strong>{{ food.donor_name }}</strong><span>{{ food.donor_address or 'Address not specified' }}</span></div>
+            </div>
+
+            <div class="food-detail-actions">
+                {% if current_user and current_user.id != food.donor_id and food.status == 'Available' %}
+                <form method="POST" action="{{ url_for('request_food', did=food.id) }}">
+                    <button type="submit" class="request-btn"><i class="fas fa-hand-holding-heart"></i> Request Food</button>
+                </form>
+                {% elif not current_user and food.status == 'Available' %}
+                <a href="{{ url_for('login') }}" class="request-btn"><i class="fas fa-hand-holding-heart"></i> Login to Request</a>
+                {% elif current_user and current_user.id == food.donor_id %}
+                <span class="detail-note">This is your food donation.</span>
+                {% else %}
+                <span class="detail-note">This food is no longer available.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

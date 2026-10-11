@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Food Listings — Waste to Worth{% endblock %}
+{% block content %}
+<div class="listing-page listing-page-cards">
+    <div class="listing-hero">
+        <div>
+            <div class="listing-kicker"><i class="fas fa-utensils"></i> WASTE TO WORTH</div>
+            <h1>Available Food</h1>
+            <p>Find fresh donations shared by your community.</p>
+        </div>
+        <div class="hero-message"><strong>Good food. Good people.</strong><span>Sharing is caring</span><i class="fas fa-leaf"></i></div>
+    </div>
+
+    <div class="listing-toolbar">
+        <form method="GET" class="listing-filters">
+            <div class="listing-search"><i class="fas fa-search"></i><input type="text" name="search" value="{{ search }}" placeholder="Search food or location..."></div>
+            <select name="food_type" aria-label="Food type">
+                <option value="">All Types</option>
+                {% for ft in ['Cooked Food','Raw Ingredients','Bakery','Fruits & Vegetables','Dairy','Beverages','Other'] %}
+                <option value="{{ ft }}" {% if food_type == ft %}selected{% endif %}>{{ ft }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="listing-filter-btn"><i class="fas fa-filter"></i> Filter</button>
+            <a href="{{ url_for('listings') }}" class="listing-clear">Clear</a>
+        </form>
+        <div class="listing-count"><strong>{{ foods|length }}</strong> donations <span>found</span></div>
+    </div>
+
+    {% if foods %}
+    <div class="donation-grid">
+        {% for f in foods %}
+        {% set type_lower = f.food_type|lower %}
+        {% if f.food_image %}
+            {% set food_photo = url_for('static', filename='uploads/food_photos/' ~ f.food_image) %}
+        {% elif 'fruit' in type_lower or 'vegetable' in type_lower or 'raw' in type_lower %}
+            {% set food_photo = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=900&q=85' %}
+        {% elif 'bakery' in type_lower %}
+            {% set food_photo = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=85' %}
+        {% elif 'dairy' in type_lower %}
+            {% set food_photo = 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=900&q=85' %}
+        {% elif 'beverage' in type_lower %}
+            {% set food_photo = 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=85' %}
+        {% else %}
+            {% set food_photo = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85' %}
+        {% endif %}
+        <article class="donation-card" role="button" tabindex="0"
+            data-food-id="{{ f.id }}"
+            data-food-name="{{ f.food_name|e }}"
+            data-food-type="{{ f.food_type|e }}"
+            data-food-image="{{ food_photo|e }}"
+            data-food-status="{{ f.status|e }}"
+            data-food-quantity="{{ f.quantity|e }}"
+            data-food-location="{{ (f.pickup_location or 'Location not specified')|e }}"
+            data-food-donor="{{ f.donor_name|e }}"
+            data-food-date="{{ (f.available_date or 'Not specified')|e }}"
+            data-food-expiry="{{ (f.expiry_time or 'Not specified')|e }}"
+            data-food-contact="{{ (f.contact_details or f.donor_phone or 'Not specified')|e }}"
+            data-request-url="{{ url_for('request_food', did=f.id) }}"
+            onclick="openFoodViewer(this)"
+            onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); openFoodViewer(this); }">
+            <div class="donation-image">
+                <img src="{{ food_photo }}" alt="{{ f.food_name }}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('image-fallback');">
+                <span class="food-type-chip">{{ f.food_type }}</span>
+                <span class="availability-chip {% if f.status != 'Available' %}not-available{% endif %}"><i class="fas fa-circle"></i> {{ f.status }}</span>
+            </div>
+            <div class="donation-body">
+                <h3 class="donation-name">{{ f.food_name }}</h3>
+                <div class="donation-details">
+                    <span><i class="fas fa-box"></i> {{ f.quantity }}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> {{ f.pickup_location or 'Location not specified' }}</span>
+                    <span><i class="fas fa-user"></i> {{ f.donor_name }}</span>
+                    <span><i class="far fa-calendar"></i> Available until {{ f.expiry_time or f.available_date or 'Not specified' }}</span>
+                </div>
+                <div class="donation-actions">
+                    {% if current_user and current_user.id != f.donor_id and f.status == 'Available' %}
+                    <form method="POST" action="{{ url_for('request_food', did=f.id) }}" onclick="event.stopPropagation()"><button type="submit" class="request-btn"><i class="fas fa-hand-holding-heart"></i> Request Food</button></form>
+                    {% elif not current_user and f.status == 'Available' %}
+                    <a href="{{ url_for('login') }}" class="request-btn" onclick="event.stopPropagation()"><i class="fas fa-hand-holding-heart"></i> Login to Request</a>
+                    {% elif f.status != 'Available' %}
+                    <span class="view-only">{{ f.status }}</span>
+                    {% endif %}
+                    {% if current_user and (current_user.id == f.donor_id or current_user.role == 'Admin') %}
+                    <form method="POST" action="{{ url_for('delete_donation', did=f.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('Delete this donation?')"><button type="submit" class="delete-btn"><i class="fas fa-trash"></i> Delete</button></form>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="listing-empty"><i class="fas fa-bowl-food"></i><h3>No food listings found</h3><p>Try changing your search or filters.</p><a href="{{ url_for('listings') }}" class="listing-filter-btn">Clear Filters</a></div>
+    {% endif %}
+</div>
+
+
+<!-- Food details viewer -->
+<div id="foodViewer" class="food-viewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Food details">
+    <div class="food-viewer-backdrop" onclick="closeFoodViewer()"></div>
+    <div class="food-viewer-panel">
+        <button type="button" class="food-viewer-close" onclick="closeFoodViewer()" aria-label="Close" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="food-viewer-main">
+            <div class="food-viewer-image-area">
+                <img id="viewerImage" src="" alt="">
+            </div>
+            <aside class="food-viewer-info">
+                <span id="viewerType" class="viewer-type"></span>
+                <span id="viewerStatus" class="viewer-status"></span>
+                <h2 id="viewerName"></h2>
+                <p class="viewer-intro">Complete information about this food donation.</p>
+                <div class="viewer-info-list">
+                    <div><i class="fas fa-box"></i><span><small>Quantity</small><strong id="viewerQuantity"></strong></span></div>
+                    <div><i class="fas fa-location-dot"></i><span><small>Pickup Location</small><strong id="viewerLocation"></strong></span></div>
+                    <div><i class="fas fa-user"></i><span><small>Donated By</small><strong id="viewerDonor"></strong></span></div>
+                    <div><i class="far fa-calendar"></i><span><small>Available Date</small><strong id="viewerDate"></strong></span></div>
+                    <div><i class="fas fa-clock"></i><span><small>Available Until</small><strong id="viewerExpiry"></strong></span></div>
+                    <div><i class="fas fa-phone"></i><span><small>Contact</small><strong id="viewerContact"></strong></span></div>
+                </div>
+                <form id="viewerRequestForm" method="POST" class="viewer-request-form">
+                    <button id="viewerRequestBtn" class="viewer-request-btn" type="submit"><i class="fas fa-hand-holding-heart"></i> Request Food</button>
+                </form>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<script>
+function openFoodViewer(card) {
+    const viewer = document.getElementById('foodViewer');
+    const d = card.dataset;
+    document.getElementById('viewerImage').src = d.foodImage;
+    document.getElementById('viewerImage').alt = d.foodName;
+    document.getElementById('viewerType').textContent = d.foodType;
+    const status = document.getElementById('viewerStatus');
+    status.textContent = '● ' + d.foodStatus;
+    status.className = 'viewer-status ' + (d.foodStatus !== 'Available' ? 'not-available' : '');
+    document.getElementById('viewerName').textContent = d.foodName;
+    document.getElementById('viewerQuantity').textContent = d.foodQuantity;
+    document.getElementById('viewerLocation').textContent = d.foodLocation;
+    document.getElementById('viewerDonor').textContent = d.foodDonor;
+    document.getElementById('viewerDate').textContent = d.foodDate;
+    document.getElementById('viewerExpiry').textContent = d.foodExpiry;
+    document.getElementById('viewerContact').textContent = d.foodContact;
+    const form = document.getElementById('viewerRequestForm');
+    const btn = document.getElementById('viewerRequestBtn');
+    form.action = d.requestUrl;
+    if (d.foodStatus === 'Available') {
+        form.style.display = 'block'; btn.style.display = 'inline-flex';
+    } else {
+        form.style.display = 'none';
+    }
+    viewer.classList.add('open');
+    viewer.setAttribute('aria-hidden','false');
+    document.body.classList.add('viewer-open');
+}
+function closeFoodViewer() {
+    const viewer = document.getElementById('foodViewer');
+    viewer.classList.remove('open'); viewer.setAttribute('aria-hidden','true');
+    document.body.classList.remove('viewer-open');
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeFoodViewer(); });
+</script>
+
+{% endblock %}

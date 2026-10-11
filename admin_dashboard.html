@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section">
+    <h1 class="page-title"><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+
+    <div class="admin-nav-cards">
+        <a href="{{ url_for('admin_users') }}" class="admin-nav-card">
+            <i class="fas fa-users"></i>
+            <span>Manage Users</span>
+            <small>{{ stats.total_users }} registered</small>
+        </a>
+        <a href="{{ url_for('admin_donations') }}" class="admin-nav-card">
+            <i class="fas fa-hand-holding-heart"></i>
+            <span>Food Donations</span>
+            <small>{{ stats.total_donations }} total</small>
+        </a>
+        <a href="{{ url_for('admin_requests') }}" class="admin-nav-card">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Food Requests</span>
+            <small>{{ stats.pending_requests }} pending</small>
+        </a>
+        
+    </div>
+
+    {% include 'report_content.html' %}
+</div>
+{% endblock %}

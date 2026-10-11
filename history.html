@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Donation History — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section">
+    <h1 class="page-title"><i class="fas fa-history"></i> Donation History</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('donated')">Food Donated</button>
+        <button class="tab-btn" onclick="showTab('received')">Food Received</button>
+    </div>
+
+    <div id="donated" class="tab-content active">
+        <h2><i class="fas fa-hand-holding-heart"></i> Food I Donated</h2>
+        {% if donated %}
+        <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Food Name</th><th>Date</th><th>Quantity</th><th>Recipient</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            {% for d in donated %}
+            <tr>
+                <td><strong>{{ d.food_name }}</strong></td>
+                <td>{{ d.created_at }}</td>
+                <td>{{ d.quantity }}</td>
+                <td>{{ d.recipient or '—' }}</td>
+                <td><span class="status-badge status-{{ d.status.lower() }}">{{ d.status }}</span></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No donation history yet.</p>
+        {% endif %}
+    </div>
+
+    <div id="received" class="tab-content">
+        <h2><i class="fas fa-hand-paper"></i> Food I Received</h2>
+        {% if received %}
+        <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Food Name</th><th>Date</th><th>Quantity</th><th>Donor</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            {% for r in received %}
+            <tr>
+                <td><strong>{{ r.food_name }}</strong></td>
+                <td>{{ r.requested_at }}</td>
+                <td>{{ r.quantity }}</td>
+                <td>{{ r.donor_name }}</td>
+                <td>
+                    <span class="status-badge status-{{ r.status.lower() }}">{{ r.status }}</span>
+                    {% if r.status == 'Completed' %}
+                        <a href="{{ url_for('feedback', req_id=r.id) }}" class="feedback-history-btn">
+                            <i class="fas fa-star"></i> Give Feedback
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No food received yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

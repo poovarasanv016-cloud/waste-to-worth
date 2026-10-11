@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="report-page">
+  <div class="report-title-row"><div><h1>Report</h1><p>View overall statistics and detailed reports of food donations and requests.</p></div><span class="report-date"><i class="fa-regular fa-calendar"></i> Donation overview</span></div>
+  <section class="report-stats">
+    <article class="report-stat green"><span class="report-icon"><i class="fa-solid fa-calendar-check"></i></span><p>Total Food Donated</p><strong>{{ report_stats.total_donations }}</strong><small>All food donations</small></article>
+    <article class="report-stat teal"><span class="report-icon"><i class="fa-solid fa-check"></i></span><p>Total Food Completed</p><strong>{{ report_stats.completed }}</strong><small>Successfully completed</small></article>
+    <article class="report-stat orange"><span class="report-icon"><i class="fa-solid fa-clock"></i></span><p>Pending Donation</p><strong>{{ report_stats.pending }}</strong><small>Awaiting confirmation</small></article>
+    <article class="report-stat blue"><span class="report-icon"><i class="fa-solid fa-circle-check"></i></span><p>Approved Donation</p><strong>{{ report_stats.approved }}</strong><small>Approved food requests</small></article>
+    <article class="report-stat red"><span class="report-icon"><i class="fa-solid fa-xmark"></i></span><p>Rejected Donation</p><strong>{{ report_stats.rejected }}</strong><small>Rejected food requests</small></article>
+    <article class="report-stat purple"><span class="report-icon"><i class="fa-solid fa-users"></i></span><p>Total Users</p><strong>{{ report_stats.total_users }}</strong><small>Registered users</small></article>
+  </section>
+  <section class="report-charts">
+    <article class="report-panel"><h3>Donation Status</h3><div class="report-chart"><canvas id="statusChart"></canvas></div></article>
+    <article class="report-panel"><div class="report-panel-heading"><h3>Donation Report</h3><select id="donationPeriod" class="donation-period" aria-label="Donation report period"><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select></div><div class="report-chart"><canvas id="monthlyChart"></canvas></div></article>
+    <article class="report-panel"><h3>Food Type Distribution</h3><div class="report-chart"><canvas id="foodChart"></canvas></div></article>
+  </section>
+  <section class="report-panel recent-report">
+    <div class="recent-heading"><h3>Recent Report</h3><div class="report-filters"><input type="date" id="reportFrom" aria-label="From date"><span>to</span><input type="date" id="reportTo" aria-label="To date"><button onclick="filterReportRows()"><i class="fa-solid fa-filter"></i> Filter</button><button class="reset-report" onclick="resetReportRows()">Reset</button></div></div>
+    <div class="report-table-scroll"><table class="report-table" id="recentReportTable"><thead><tr><th>Date</th><th>Food Name</th><th>Quantity</th><th>Donor</th><th>Receiver</th><th>Status</th></tr></thead><tbody>
+    {% for item in reports %}<tr data-date="{{ (item['created_at'] or '')[:10] }}"><td>{{ (item['created_at'] or '—')[:10] }}</td><td>{{ item['food_name'] }}</td><td>{{ item['quantity'] }}</td><td>{{ item['donor_name'] }}</td><td>{{ item['receiver_name'] }}</td><td><span class="report-status {{ (item['status'] or 'pending')|lower }}">{{ item['status'] }}</span></td></tr>{% else %}<tr><td colspan="6" class="report-empty">No report records found.</td></tr>{% endfor %}
+    </tbody></table></div><div class="report-table-footer"><span id="reportCount"></span><div class="report-pagination" id="reportPagination"></div></div>
+  </section>
+</div>
+<script>
+const statusData = {{ [report_stats.completed, report_stats.pending, report_stats.approved, report_stats.rejected]|tojson }};
+const monthLabels = {{ monthly_labels|tojson }};
+const monthValues = {{ monthly_values|tojson }};
+const weeklyLabels = {{ weekly_labels|tojson }};
+const weeklyValues = {{ weekly_values|tojson }};
+const yearlyLabels = {{ yearly_labels|tojson }};
+const yearlyValues = {{ yearly_values|tojson }};
+const foodLabels = {{ food_labels|tojson }};
+const foodValues = {{ food_values|tojson }};
+new Chart(document.getElementById('statusChart'),{type:'doughnut',data:{labels:['Completed','Pending','Approved','Rejected'],datasets:[{data:statusData,backgroundColor:['#239b68','#f4a340','#3384df','#e6535c'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom'}}}});
+const donationChart = new Chart(document.getElementById('monthlyChart'),{type:'bar',data:{labels:monthLabels,datasets:[{label:'Donations',data:monthValues,backgroundColor:'#239b68',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,precision:0},x:{grid:{display:false}}}}});
+document.getElementById('donationPeriod').addEventListener('change', function(){
+  const sets={weekly:[weeklyLabels,weeklyValues],monthly:[monthLabels,monthValues],yearly:[yearlyLabels,yearlyValues]};
+  const selected=sets[this.value] || sets.monthly;
+  donationChart.data.labels=selected[0];
+  donationChart.data.datasets[0].data=selected[1];
+  donationChart.update();
+});
+new Chart(document.getElementById('foodChart'),{type:'bar',data:{labels:foodLabels,datasets:[{data:foodValues,backgroundColor:['#3384df','#25a76f','#f2a23b','#8171db','#e75a69'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}});
+let reportPage=1; const reportRows=[...document.querySelectorAll('#recentReportTable tbody tr[data-date]')]; let visibleRows=[...reportRows]; const reportPageSize=5;
+function drawReportTable(){reportRows.forEach(r=>r.style.display='none');let start=(reportPage-1)*reportPageSize;visibleRows.slice(start,start+reportPageSize).forEach(r=>r.style.display='');document.getElementById('reportCount').textContent=visibleRows.length?`Showing ${start+1} to ${Math.min(start+reportPageSize,visibleRows.length)} of ${visibleRows.length} entries`:'No entries found';let box=document.getElementById('reportPagination');box.innerHTML='';let pages=Math.ceil(visibleRows.length/reportPageSize);for(let i=1;i<=pages;i++){let b=document.createElement('button');b.textContent=i;b.className=i===reportPage?'selected':'';b.onclick=()=>{reportPage=i;drawReportTable()};box.appendChild(b)}}
+function filterReportRows(){let from=document.getElementById('reportFrom').value,to=document.getElementById('reportTo').value;if(from&&to&&from>to){alert('From date must be before To date.');return}visibleRows=reportRows.filter(r=>(!from||r.dataset.date>=from)&&(!to||r.dataset.date<=to));reportPage=1;drawReportTable()}
+function resetReportRows(){document.getElementById('reportFrom').value='';document.getElementById('reportTo').value='';visibleRows=[...reportRows];reportPage=1;drawReportTable()}drawReportTable();
+</script>

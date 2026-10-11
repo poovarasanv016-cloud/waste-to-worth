@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Users Feedback — Waste to Worth{% endblock %}
+{% block content %}
+<div class="container section admin-feedback-page">
+    <div class="page-header-row feedback-admin-head">
+        <div>
+            <h1 class="page-title"><i class="fas fa-comments"></i> Users Feedback</h1>
+            <p class="page-subtitle">View feedback submitted after completed food requests.</p>
+        </div>
+    </div>
+
+    <div class="feedback-admin-stats">
+        <div class="admin-feedback-stat"><i class="fas fa-comment-dots"></i><div><strong>{{ stats.total }}</strong><span>Total Feedback</span></div></div>
+        <div class="admin-feedback-stat"><i class="fas fa-star"></i><div><strong>{{ stats.average }}</strong><span>Average Rating</span></div></div>
+        <div class="admin-feedback-stat"><i class="fas fa-heart"></i><div><strong>{{ stats.five_star }}</strong><span>5 Star Reviews</span></div></div>
+    </div>
+
+    {% if feedbacks %}
+    <div class="table-wrap">
+        <table class="data-table admin-feedback-table">
+            <thead>
+                <tr><th>User</th><th>Food</th><th>Donor</th><th>Rating</th><th>Feedback</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+            {% for f in feedbacks %}
+            <tr>
+                <td><strong>{{ f.user_name }}</strong><small>{{ f.user_email }}</small></td>
+                <td>{{ f.food_name }}</td>
+                <td>{{ f.donor_name }}</td>
+                <td><span class="admin-rating">{% for i in range(1,6) %}<span class="{% if i <= f.rating %}filled{% endif %}">★</span>{% endfor %}</span></td>
+                <td>{{ f.comment or 'No comment provided.' }}</td>
+                <td>{{ f.created_at }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-feedback">
+        <div><i class="fas fa-comment-slash"></i></div>
+        <h2>No user feedback yet</h2>
+        <p>Feedback will appear here after users complete food requests and submit their reviews.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

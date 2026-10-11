@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}View User — Admin{% endblock %}
+{% block content %}
+<div class="container section">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title"><i class="fas fa-user-circle"></i> User Details</h1>
+            <p style="color:var(--mid);margin:.35rem 0 0;">Complete profile, donation history and received food details.</p>
+        </div>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-outline">← Manage Users</a>
+    </div>
+
+    <!-- Full profile -->
+    <div class="form-page-card user-profile-card">
+        <div class="profile-heading">
+            <div class="mini-avatar profile-avatar">{{ user.name[0] }}</div>
+            <div>
+                <h2>{{ user.name }}</h2>
+                <div class="profile-meta">
+                    <span class="role-tag role-{{ user.role.lower() }}">{{ user.role }}</span>
+                    <span><i class="fas fa-id-badge"></i> User #{{ user.id }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="detail-item"><span class="detail-label"><i class="fas fa-user"></i> Full Name</span><strong>{{ user.name }}</strong></div>
+            <div class="detail-item"><span class="detail-label"><i class="fas fa-envelope"></i> Email</span><strong>{{ user.email }}</strong></div>
+            <div class="detail-item"><span class="detail-label"><i class="fas fa-phone"></i> Phone</span><strong>{{ user.phone or 'Not provided' }}</strong></div>
+            <div class="detail-item"><span class="detail-label"><i class="fas fa-calendar-alt"></i> Joined</span><strong>{{ user.created_at }}</strong></div>
+            <div class="detail-item detail-wide"><span class="detail-label"><i class="fas fa-map-marker-alt"></i> Address</span><strong>{{ user.address or 'Not provided' }}</strong></div>
+        </div>
+    </div>
+
+    <!-- Activity summary -->
+    <div class="activity-summary">
+        <div class="summary-card"><div class="summary-icon"><i class="fas fa-hand-holding-heart"></i></div><div><strong>{{ summary.donated }}</strong><span>Food Donated</span></div></div>
+        <div class="summary-card"><div class="summary-icon"><i class="fas fa-utensils"></i></div><div><strong>{{ summary.received }}</strong><span>Food Received</span></div></div>
+        <div class="summary-card"><div class="summary-icon"><i class="fas fa-check-circle"></i></div><div><strong>{{ summary.completed_donations }}</strong><span>Completed Donations</span></div></div>
+        <div class="summary-card"><div class="summary-icon"><i class="fas fa-box-open"></i></div><div><strong>{{ summary.completed_received }}</strong><span>Completed Received</span></div></div>
+    </div>
+
+    <!-- Donation history -->
+    <div class="activity-card">
+        <div class="activity-header">
+            <div><h2><i class="fas fa-hand-holding-heart"></i> Food Donated by {{ user.name }}</h2><p>All food donations created by this user.</p></div>
+            <span class="count-pill">{{ donated_foods|length }} records</span>
+        </div>
+        {% if donated_foods %}
+        <div class="table-wrap">
+            <table class="data-table activity-table">
+                <thead><tr><th>Food</th><th>Quantity</th><th>Type</th><th>Available</th><th>Expiry</th><th>Location</th><th>Status</th><th>Received By</th></tr></thead>
+                <tbody>
+                {% for d in donated_foods %}
+                <tr>
+                    <td><strong>{{ d.food_name }}</strong></td>
+                    <td>{{ d.quantity }}</td>
+                    <td><span class="type-tag">{{ d.food_type }}</span></td>
+                    <td>{{ d.available_date or '—' }}</td>
+                    <td>{{ d.expiry_time or '—' }}</td>
+                    <td>{{ d.pickup_location or '—' }}</td>
+                    <td><span class="status-badge status-{{ d.status.lower() }}">{{ d.status }}</span></td>
+                    <td>{{ d.receiver_name or 'Not requested yet' }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<div class="empty-activity"><i class="fas fa-box-open"></i><p>No food donations found for this user.</p></div>{% endif %}
+    </div>
+
+    <!-- Received food history -->
+    <div class="activity-card">
+        <div class="activity-header">
+            <div><h2><i class="fas fa-utensils"></i> Food Received by {{ user.name }}</h2><p>Food requests made by this user and their current status.</p></div>
+            <span class="count-pill">{{ received_foods|length }} records</span>
+        </div>
+        {% if received_foods %}
+        <div class="table-wrap">
+            <table class="data-table activity-table">
+                <thead><tr><th>Food</th><th>Quantity</th><th>Type</th><th>Donor</th><th>Pickup Location</th><th>Requested On</th><th>Status</th></tr></thead>
+                <tbody>
+                {% for r in received_foods %}
+                <tr>
+                    <td><strong>{{ r.food_name }}</strong></td>
+                    <td>{{ r.quantity }}</td>
+                    <td><span class="type-tag">{{ r.food_type }}</span></td>
+                    <td><strong>{{ r.donor_name }}</strong><small class="sub-text">{{ r.donor_phone or r.donor_email }}</small></td>
+                    <td>{{ r.pickup_location or '—' }}</td>
+                    <td>{{ r.requested_at or '—' }}</td>
+                    <td><span class="status-badge status-{{ r.status.lower() }}">{{ r.status }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<div class="empty-activity"><i class="fas fa-utensils"></i><p>No received food records found for this user.</p></div>{% endif %}
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ url_for('admin_users') }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to Users</a>
+        {% if user.role != 'Admin' %}
+        <form method="POST" action="{{ url_for('delete_user', uid=user.id) }}" onsubmit="return confirm('Delete user {{ user.name }}?')">
+            <button class="btn btn-danger"><i class="fas fa-trash"></i> Delete User</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.user-profile-card{max-width:none;margin-bottom:1.25rem;}
+.profile-heading{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
+.profile-avatar{width:70px;height:70px;font-size:1.7rem;flex:0 0 auto;}
+.profile-heading h2{margin:0;color:var(--dark);}
+.profile-meta{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:.45rem;color:var(--mid);font-size:.9rem;}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;}
+.detail-item{background:#f8fafb;border:1px solid var(--border);border-radius:10px;padding:1rem;}
+.detail-wide{grid-column:1/-1;}
+.detail-label{display:block;color:var(--mid);font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.4rem;}
+.detail-label i{margin-right:.35rem;color:var(--green);}
+.detail-item strong{color:var(--dark);font-size:.98rem;word-break:break-word;}
+.activity-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.25rem 0;}
+.summary-card{display:flex;align-items:center;gap:.8rem;background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 4px 14px rgba(0,0,0,.04);}
+.summary-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#eaf7ef;color:var(--green);font-size:1.1rem;}
+.summary-card strong{display:block;font-size:1.35rem;color:var(--dark);line-height:1.1;}.summary-card span{display:block;color:var(--mid);font-size:.78rem;margin-top:.2rem;}
+.activity-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:1.25rem;box-shadow:0 4px 18px rgba(0,0,0,.04);}
+.activity-header{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.2rem 1.25rem;border-bottom:1px solid var(--border);}
+.activity-header h2{margin:0;color:var(--dark);font-size:1.15rem;}.activity-header h2 i{color:var(--green);margin-right:.4rem;}.activity-header p{margin:.3rem 0 0;color:var(--mid);font-size:.85rem;}
+.count-pill{white-space:nowrap;background:#edf7f1;color:var(--green);border-radius:999px;padding:.4rem .75rem;font-size:.8rem;font-weight:700;}
+.activity-table{margin:0;}.activity-table td,.activity-table th{white-space:nowrap;}.sub-text{display:block;color:var(--mid);font-size:.72rem;margin-top:.18rem;}
+.empty-activity{text-align:center;padding:2rem;color:var(--mid);}.empty-activity i{font-size:2rem;opacity:.45;}.empty-activity p{margin:.6rem 0 0;}
+.page-actions{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.25rem;}
+@media(max-width:900px){.activity-summary{grid-template-columns:repeat(2,1fr);}.table-wrap{overflow-x:auto;}.activity-table{min-width:1000px;}}
+@media(max-width:650px){.detail-grid{grid-template-columns:1fr;}.detail-wide{grid-column:auto;}.activity-summary{grid-template-columns:1fr;}.activity-header{align-items:flex-start;flex-direction:column;}.profile-heading{align-items:flex-start;}.page-header-row{align-items:flex-start;gap:1rem;flex-direction:column;}}
+</style>
+{% endblock %}
